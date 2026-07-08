@@ -64,6 +64,29 @@ export async function renderLesson(id) {
     root.appendChild(block);
   }
 
+  // vocabulary (a lesson-level array, not a "section" — was collected for search
+  // indexing but never actually rendered onto the page; adding that here)
+  if (lesson.vocabulary && lesson.vocabulary.length) {
+    const vocabBlock = document.createElement('div');
+    vocabBlock.className = 'block';
+    vocabBlock.innerHTML = '<h3>Vocabulary</h3>';
+    lesson.vocabulary.forEach(v => {
+      const vEl = document.createElement('div');
+      vEl.className = 'example';
+      const articleWord = v.article ? `${escapeHtml(v.article)} ${escapeHtml(v.word)}` : escapeHtml(v.word);
+      vEl.innerHTML = `<div><strong>${articleWord}</strong></div>` +
+        (v.plural ? `<div class="small">Plural: ${escapeHtml(v.plural)}</div>` : '');
+      if (v.audio) {
+        const audio = document.createElement('audio');
+        audio.controls = true;
+        audio.src = v.audio;
+        vEl.appendChild(audio);
+      }
+      vocabBlock.appendChild(vEl);
+    });
+    root.appendChild(vocabBlock);
+  }
+
   // related
   if (lesson.related && lesson.related.length) {
     const rel = document.createElement('div');
