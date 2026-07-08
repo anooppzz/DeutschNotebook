@@ -1,0 +1,17 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - name: Install AJV CLI
+        run: npm install -g ajv-cli
+      - name: Validate lessons against schema
+        run: ajv validate -s schema/lesson.schema.json -d "data/lessons/*.json"
+      - name: Validate exercises against schema
+        run: ajv validate -s schema/exercise.schema.json -d "data/exercises/*.json"

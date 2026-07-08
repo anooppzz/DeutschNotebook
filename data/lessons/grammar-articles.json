@@ -1,0 +1,16 @@
+{
+  "version": "1.0",
+  "id": "grammar-articles-01",
+  "title": "Definite and Indefinite Articles",
+  "level": "A1",
+  "category": "Grammar",
+  "tags": ["articles"],
+  "estimatedTime": 6,
+  "difficulty": 1,
+  "sections": [
+    { "type": "intro", "title": "Overview", "text": "German articles change with gender, number, and case." },
+    { "type": "examples", "examples": [{ "text": "Der Mann, die Frau, das Kind.", "translation": "The man, the woman, the child." }] }
+  ],
+  "exercises": [],
+  "metadata": {}
+}

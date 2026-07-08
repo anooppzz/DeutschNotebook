@@ -1,0 +1,18 @@
+{
+  "version": "1.0",
+  "id": "grammar-perfekt-01",
+  "title": "Perfekt Tense — Regular Verbs",
+  "level": "A2",
+  "category": "Grammar",
+  "tags": ["perfekt", "verbs"],
+  "related": ["grammar-articles-01"],
+  "estimatedTime": 7,
+  "difficulty": 2,
+  "sections": [
+    { "type": "intro", "title": "Overview", "text": "The Perfekt tense is the most common way to talk about the past in spoken German." },
+    { "type": "grammar", "title": "Formation", "text": "haben/sein (conjugated) + past participle (ge...t / ge...en)." },
+    { "type": "examples", "examples": [{ "text": "Ich habe gespielt.", "translation": "I played / have played." }] }
+  ],
+  "exercises": [],
+  "metadata": { "source": "ai-draft" }
+}

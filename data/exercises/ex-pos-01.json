@@ -1,0 +1,9 @@
+{
+  "version": "1.0",
+  "id": "ex-pos-01",
+  "type": "multiple_choice",
+  "prompt": "Choose the correct possessive article: Das ist ___ Buch.",
+  "options": ["mein", "meine", "meinen"],
+  "answer": 0,
+  "tags": ["possessive", "articles"]
+}

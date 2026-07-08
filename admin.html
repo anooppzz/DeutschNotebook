@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Deutsch Knowledge System — Admin</title>
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+  <div class="app-root">
+    <div class="header card">
+      <div class="title">DKS Admin</div>
+      <div class="controls">
+        <a href="index.html" class="btn" style="text-decoration:none;color:#fff">Back to app</a>
+      </div>
+    </div>
+    <div id="importRoot"></div>
+    <div id="adminRoot"></div>
+  </div>
+  <script type="module">
+    import { openDB } from './js/storage.js';
+    import { mountImportUI } from './js/import-ui.js';
+    import { mountAdmin } from './js/admin.js';
+
+    (async () => {
+      await openDB();
+      mountImportUI(document.getElementById('importRoot'));
+      mountAdmin(document.getElementById('adminRoot'));
+    })();
+  </script>
+</body>
+</html>

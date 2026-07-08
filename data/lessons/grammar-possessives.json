@@ -1,0 +1,22 @@
+{
+  "version": "1.0",
+  "id": "grammar-possessives-01",
+  "title": "Possessive Articles",
+  "level": "A1",
+  "category": "Grammar",
+  "tags": ["possessive", "articles"],
+  "related": ["grammar-articles-01"],
+  "estimatedTime": 8,
+  "difficulty": 1,
+  "sections": [
+    { "type": "intro", "title": "Overview", "text": "Possessive articles agree with the noun in gender and number." },
+    { "type": "grammar", "title": "Forms", "text": "mein, dein, sein, ihr, unser, euer, ihr" },
+    { "type": "examples", "examples": [{ "text": "Das ist mein Buch.", "translation": "That is my book.", "audio": "assets/audio/mein_buch.mp3" }] },
+    { "type": "exercise", "exerciseId": "ex-pos-01" }
+  ],
+  "vocabulary": [
+    { "id": "v-hund", "word": "Hund", "article": "der", "plural": "Hunde", "audio": "assets/audio/hund.mp3" }
+  ],
+  "exercises": ["ex-pos-01"],
+  "metadata": { "created_at": "2026-07-07T22:00:00Z", "source": "manual" }
+}

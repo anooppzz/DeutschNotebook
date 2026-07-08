@@ -1,0 +1,19 @@
+{
+  "version": "1.0",
+  "id": "vocab-basic-01",
+  "title": "Basic Vocabulary",
+  "level": "A1",
+  "category": "Vocabulary",
+  "tags": ["vocab"],
+  "estimatedTime": 5,
+  "difficulty": 1,
+  "sections": [
+    { "type": "intro", "title": "Words", "text": "Common nouns and articles." }
+  ],
+  "vocabulary": [
+    { "id": "v-hund", "word": "Hund", "article": "der", "plural": "Hunde", "audio": "assets/audio/hund.mp3" },
+    { "id": "v-katze", "word": "Katze", "article": "die", "plural": "Katzen", "audio": "assets/audio/katze.mp3" }
+  ],
+  "exercises": [],
+  "metadata": {}
+}
