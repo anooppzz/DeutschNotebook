@@ -3,6 +3,7 @@
   "id": "ex-pos-01",
   "type": "multiple_choice",
   "prompt": "Choose the correct possessive article: Das ist ___ Buch.",
+  "concept": "possessive-articles",
   "options": ["mein", "meine", "meinen"],
   "answer": 0,
   "tags": ["possessive", "articles"]

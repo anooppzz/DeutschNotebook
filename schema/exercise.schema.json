@@ -8,6 +8,7 @@
     "id": { "type": "string" },
     "type": { "type": "string", "enum": ["multiple_choice", "fill_blank", "drag_drop", "ordering", "listening", "speaking"] },
     "prompt": { "type": "string" },
+    "concept": { "type": "string" },
     "payload": { "type": "object" },
     "options": { "type": "array", "items": { "type": "string" } },
     "answer": {},

@@ -1,5 +1,6 @@
-import { getLesson, listLessons } from './storage.js';
+import { getLesson, listLessons, getMistakeStats } from './storage.js';
 import { renderExercise } from './quiz.js';
+import { dueItems } from './review.js';
 
 export async function renderLessonList() {
   const container = document.createElement('div');
@@ -100,4 +101,56 @@ export async function renderLesson(id) {
 
 function escapeHtml(s = '') {
   return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+export async function renderReviewMode() {
+  const root = document.createElement('div');
+
+  const header = document.createElement('div');
+  header.className = 'card';
+  header.innerHTML = '<h2 class="lesson-title">Review</h2>';
+  root.appendChild(header);
+
+  // Weak-concept summary, from the mistake-pattern tracking in storage.js.
+  // Only shown once at least one mistake has been recorded anywhere.
+  const mistakes = await getMistakeStats();
+  if (mistakes.length) {
+    const mBlock = document.createElement('div');
+    mBlock.className = 'card';
+    mBlock.innerHTML = '<h3>Often missed</h3>';
+    mistakes.slice(0, 5).forEach(m => {
+      const line = document.createElement('div');
+      line.className = 'block small';
+      line.textContent = `${m.concept} — missed ${m.count} time${m.count === 1 ? '' : 's'}`;
+      mBlock.appendChild(line);
+    });
+    root.appendChild(mBlock);
+  }
+
+  // Due exercises: new (never attempted) or past their scheduled review date.
+  const due = await dueItems();
+  const dueBlock = document.createElement('div');
+  dueBlock.className = 'card';
+  if (!due.length) {
+    dueBlock.innerHTML = '<div class="small">Nothing due for review right now. Come back later, or open a lesson from Home to learn something new.</div>';
+    root.appendChild(dueBlock);
+    return root;
+  }
+  dueBlock.innerHTML = `<div class="small">${due.length} exercise${due.length === 1 ? '' : 's'} due (${due.filter(d => d.reason === 'new').length} new, ${due.filter(d => d.reason === 'review').length} to review).</div>`;
+  root.appendChild(dueBlock);
+
+  for (const item of due) {
+    const wrap = document.createElement('div');
+    wrap.className = 'block';
+    const label = document.createElement('div');
+    label.className = 'small';
+    label.style.marginBottom = '4px';
+    label.textContent = item.reason === 'new' ? 'New' : 'Review';
+    wrap.appendChild(label);
+    const exNode = await renderExercise(item.id, null);
+    wrap.appendChild(exNode);
+    root.appendChild(wrap);
+  }
+
+  return root;
 }

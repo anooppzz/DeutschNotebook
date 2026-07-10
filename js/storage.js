@@ -1,6 +1,6 @@
 // storage.js - full implementation
 const DB_NAME = 'dks-db';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 let db = null;
 
 export function openDB() {
@@ -14,6 +14,7 @@ export function openDB() {
       if (!idb.objectStoreNames.contains('progress')) idb.createObjectStore('progress', { keyPath: 'key' });
       if (!idb.objectStoreNames.contains('graph')) idb.createObjectStore('graph', { keyPath: 'id' });
       if (!idb.objectStoreNames.contains('index')) idb.createObjectStore('index', { keyPath: 'key' });
+      if (!idb.objectStoreNames.contains('mistakes')) idb.createObjectStore('mistakes', { keyPath: 'concept' });
     };
     req.onsuccess = e => { db = e.target.result; resolve(db); };
     req.onerror = e => reject(e.target.error);
@@ -175,6 +176,43 @@ export async function getIndexEntries() {
 
 function tokenize(s = '') {
   return s.toLowerCase().split(/\W+/).filter(Boolean);
+}
+
+/* Mistake pattern tracking: one running counter per concept, incremented
+   each time a wrong answer is tagged with that concept. This is separate
+   from per-exercise progress (which tracks a single exercise's own history)
+   — this aggregates across every exercise sharing a concept, so recurring
+   weak spots ("feminine endings") surface even when the mistakes happen on
+   different individual questions. */
+export async function incrementMistake(concept) {
+  if (!concept) return null;
+  await openDB();
+  return new Promise((resolve, reject) => {
+    const store = tx('mistakes', 'readwrite');
+    const getReq = store.get(concept);
+    getReq.onsuccess = () => {
+      const existing = getReq.result;
+      const record = {
+        concept,
+        count: (existing ? existing.count : 0) + 1,
+        lastMissed: Date.now()
+      };
+      const putReq = store.put(record);
+      putReq.onsuccess = () => resolve(record);
+      putReq.onerror = e => reject(e.target.error);
+    };
+    getReq.onerror = e => reject(e.target.error);
+  });
+}
+
+export async function getMistakeStats() {
+  await openDB();
+  return new Promise((resolve, reject) => {
+    const store = tx('mistakes');
+    const req = store.getAll();
+    req.onsuccess = () => resolve((req.result || []).sort((a, b) => b.count - a.count));
+    req.onerror = e => reject(e.target.error);
+  });
 }
 
 /* Utility: bulk import lessons from the data/lessons folder (used for initial seeding) */

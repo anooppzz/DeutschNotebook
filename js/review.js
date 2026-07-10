@@ -1,4 +1,4 @@
-import { getProgress, putProgress, listLessons } from './storage.js';
+import { getProgress, putProgress, listLessons, incrementMistake } from './storage.js';
 
 const MIN_INTERVAL_DAYS = 1;
 const MAX_INTERVAL_DAYS = 60;
@@ -27,7 +27,7 @@ export function nextInterval(existing, correct) {
  * on every answer (which never actually accumulated attempts or scheduled
  * anything).
  */
-export async function recordAnswer(exerciseId, correct) {
+export async function recordAnswer(exerciseId, correct, concept) {
   const key = `ex:${exerciseId}`;
   const existing = await getProgress(key);
   const attempts = (existing && existing.attempts ? existing.attempts : 0) + 1;
@@ -41,6 +41,9 @@ export async function recordAnswer(exerciseId, correct) {
     dueDate: now + interval * DAY_MS
   };
   await putProgress(key, record);
+  if (!correct && concept) {
+    await incrementMistake(concept);
+  }
   return record;
 }
 

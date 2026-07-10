@@ -1,4 +1,4 @@
-import { renderLessonList, renderLesson } from './renderer.js';
+import { renderLessonList, renderLesson, renderReviewMode } from './renderer.js';
 
 function mountRoot(root) {
   root.innerHTML = `
@@ -7,12 +7,14 @@ function mountRoot(root) {
       <div class="controls">
         <input id="searchInput" class="input" placeholder="Search…" aria-label="Search lessons" />
         <button id="btnHome" class="btn">Home</button>
+        <button id="btnReview" class="btn">Review</button>
         <a href="admin.html" class="btn" style="text-decoration:none;color:#fff">Admin</a>
       </div>
     </div>
     <div id="page"></div>
   `;
   document.getElementById('btnHome').addEventListener('click', () => { location.hash = ''; });
+  document.getElementById('btnReview').addEventListener('click', () => { location.hash = '#review'; });
   const si = document.getElementById('searchInput');
   si.addEventListener('keydown', e => {
     if (e.key === 'Enter' && si.value.trim()) {
@@ -38,6 +40,9 @@ async function route(root) {
   } else if (hash.startsWith('lesson=')) {
     const id = decodeURIComponent(hash.split('=')[1]);
     const node = await renderLesson(id);
+    page.appendChild(node);
+  } else if (hash === 'review') {
+    const node = await renderReviewMode();
     page.appendChild(node);
   } else if (hash.startsWith('search=')) {
     const q = decodeURIComponent(hash.split('=')[1]);
