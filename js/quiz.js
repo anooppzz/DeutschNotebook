@@ -1,5 +1,5 @@
 // quiz.js - exercise registry + plugin API
-import { putProgress } from './storage.js';
+import { recordAnswer } from './review.js';
 
 const registry = {};
 
@@ -48,7 +48,7 @@ registerExercise('multiple_choice', (exercise) => {
     btn.addEventListener('click', async () => {
       const correct = (i === exercise.answer);
       showFeedback(root, correct);
-      await putProgress(`ex:${exercise.id}`, { attempts: 1, correct, last: Date.now() });
+      await recordAnswer(exercise.id, correct);
     });
     opts.appendChild(btn);
   });
@@ -75,7 +75,7 @@ registerExercise('fill_blank', (exercise) => {
     const val = input.value.trim();
     const correct = String(exercise.answer).toLowerCase() === val.toLowerCase();
     showFeedback(root, correct);
-    await putProgress(`ex:${exercise.id}`, { attempts: 1, correct, last: Date.now() });
+    await recordAnswer(exercise.id, correct);
   });
   const row = document.createElement('div');
   row.style.marginTop = '8px';
@@ -135,7 +135,7 @@ registerExercise('drag_drop', (exercise) => {
       if (String((exercise.payload.answers || [])[i]) !== String(assigned)) correct = false;
     });
     showFeedback(root, correct);
-    await putProgress(`ex:${exercise.id}`, { attempts: 1, correct, last: Date.now() });
+    await recordAnswer(exercise.id, correct);
   });
   root.appendChild(itemsWrap);
   root.appendChild(targetsWrap);
@@ -188,7 +188,7 @@ registerExercise('ordering', (exercise) => {
     const items = Array.from(list.children).map(n => n.textContent);
     const correct = JSON.stringify(items) === JSON.stringify(exercise.payload.answers);
     showFeedback(root, correct);
-    await putProgress(`ex:${exercise.id}`, { attempts: 1, correct, last: Date.now() });
+    await recordAnswer(exercise.id, correct);
   });
   root.appendChild(list);
   root.appendChild(btn);
@@ -245,7 +245,7 @@ registerExercise('matching', (exercise) => {
       if (String((exercise.payload.answers || [])[idx]) !== String(c.dataset.match)) correct = false;
     });
     showFeedback(root, correct);
-    await putProgress(`ex:${exercise.id}`, { attempts: 1, correct, last: Date.now() });
+    await recordAnswer(exercise.id, correct);
   });
   wrap.appendChild(left);
   wrap.appendChild(right);
@@ -281,7 +281,7 @@ registerExercise('listening', (exercise) => {
     const val = input.value.trim();
     const correct = String(exercise.answer).toLowerCase() === val.toLowerCase();
     showFeedback(root, correct);
-    await putProgress(`ex:${exercise.id}`, { attempts: 1, correct, last: Date.now() });
+    await recordAnswer(exercise.id, correct);
   });
   const row = document.createElement('div');
   row.style.marginTop = '8px';
