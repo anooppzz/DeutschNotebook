@@ -11,9 +11,20 @@
     <div id="out"></div>
   </div>
   <script type="module">
-    import './storage.spec.js';
-    import './validator.spec.js';
-    import './review.spec.js';
+    async function loadSpec(path) {
+      try {
+        await import(path);
+      } catch (err) {
+        const out = document.getElementById('out');
+        const p = document.createElement('div');
+        p.textContent = `FAILED TO LOAD ${path}: ${err.message}`;
+        p.style.color = 'red';
+        out.appendChild(p);
+      }
+    }
+    await loadSpec('./storage.spec.js');
+    await loadSpec('./validator.spec.js');
+    await loadSpec('./review.spec.js');
   </script>
 </body>
 </html>
