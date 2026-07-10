@@ -9,7 +9,7 @@ async function assert(cond, msg) {
   if (!cond) throw new Error(msg);
 }
 
-(async () => {
+export async function run() {
   await openDB();
   const sample = { id: 'test-lesson-1', title: 'Test Lesson', sections: [{ type: 'intro', text: 'Hello' }], version: '1.0' };
   await putLesson(sample);
@@ -34,4 +34,4 @@ async function assert(cond, msg) {
   done.textContent = 'Storage tests completed';
   done.style.marginTop = '12px';
   document.getElementById('out').appendChild(done);
-})();
+}

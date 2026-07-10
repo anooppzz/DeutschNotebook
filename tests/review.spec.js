@@ -10,7 +10,7 @@ async function assert(cond, msg) {
   if (!cond) throw new Error(msg);
 }
 
-(async () => {
+export async function run() {
   await openDB();
 
   // Every test id below is scoped to this run (Date.now()) so repeated runs
@@ -65,4 +65,4 @@ async function assert(cond, msg) {
   done.textContent = 'Review scheduler tests completed';
   done.style.marginTop = '12px';
   document.getElementById('out').appendChild(done);
-})();
+}

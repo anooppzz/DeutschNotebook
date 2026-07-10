@@ -11,20 +11,21 @@
     <div id="out"></div>
   </div>
   <script type="module">
-    async function loadSpec(path) {
+    async function runSpec(path, label) {
       try {
-        await import(path);
+        const mod = await import(path);
+        await mod.run();
       } catch (err) {
         const out = document.getElementById('out');
         const p = document.createElement('div');
-        p.textContent = `FAILED TO LOAD ${path}: ${err.message}`;
+        p.textContent = `FAILED: ${label}: ${err.message}`;
         p.style.color = 'red';
         out.appendChild(p);
       }
     }
-    await loadSpec('./storage.spec.js');
-    await loadSpec('./validator.spec.js');
-    await loadSpec('./review.spec.js');
+    await runSpec('./storage.spec.js', 'storage.spec.js');
+    await runSpec('./validator.spec.js', 'validator.spec.js');
+    await runSpec('./review.spec.js', 'review.spec.js');
   </script>
 </body>
 </html>

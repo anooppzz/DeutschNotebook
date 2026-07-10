@@ -9,7 +9,7 @@ async function assert(cond, msg) {
   if (!cond) throw new Error(msg);
 }
 
-(async () => {
+export async function run() {
   const ajv = new Ajv({ allErrors: true, strict: false });
   const lessonSchema = await (await fetch('../schema/lesson.schema.json')).json();
   ajv.addSchema(lessonSchema, 'lesson');
@@ -26,4 +26,4 @@ async function assert(cond, msg) {
   done.textContent = 'Validator tests completed';
   done.style.marginTop = '12px';
   document.getElementById('out').appendChild(done);
-})();
+}
