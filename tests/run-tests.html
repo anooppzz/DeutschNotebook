@@ -11,6 +11,20 @@
     <div id="out"></div>
   </div>
   <script type="module">
+    import { useTestDatabase } from '../js/storage.js';
+
+    // Route all storage calls in this page to a separate 'dks-db-test'
+    // database instead of the real 'dks-db' the live app uses. Must happen
+    // before any spec's run() calls openDB() — done here, once, up front.
+    useTestDatabase();
+
+    // Each spec module exports an async run() function instead of
+    // self-executing on import. This matters: `await import(path)` only
+    // waits for the module's top-level synchronous code to finish, NOT for
+    // any async work it kicks off — a fire-and-forget async IIFE would
+    // resolve the import almost immediately, before its own tests actually
+    // ran. Explicitly awaiting the exported run() is what guarantees the
+    // three spec files execute in true sequence rather than racing.
     async function runSpec(path, label) {
       try {
         const mod = await import(path);

@@ -1,7 +1,20 @@
 // storage.js - full implementation
-const DB_NAME = 'dks-db';
+let DB_NAME = 'dks-db';
 const DB_VERSION = 3;
 let db = null;
+
+/* Switches all subsequent storage calls to an isolated test database
+   instead of the real 'dks-db' the live app uses. Must be called before
+   openDB() (or anything that triggers it) runs for the first time on a
+   given page — the intended caller is tests/run-tests.html, once, before
+   any spec's run() executes. This exists because tests were previously
+   writing fake lessons/progress/mistakes directly into the same database
+   real users' data lives in, which showed up as fake entries polluting the
+   live Dashboard, lesson list, and Review page. */
+export function useTestDatabase() {
+  DB_NAME = 'dks-db-test';
+  db = null;
+}
 
 export function openDB() {
   return new Promise((resolve, reject) => {
