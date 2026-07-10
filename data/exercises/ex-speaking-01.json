@@ -1,0 +1,10 @@
+{
+  "version": "1.0",
+  "id": "ex-speaking-01",
+  "type": "speaking",
+  "prompt": "Say aloud: Das ist mein Buch.",
+  "concept": "possessive-articles",
+  "lang": "de-DE",
+  "answer": "das ist mein buch",
+  "tags": ["possessive", "speaking"]
+}

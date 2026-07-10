@@ -172,6 +172,19 @@ export async function getGraphNeighbors(nodeId) {
   });
 }
 
+/* Returns every edge in the graph store, unfiltered. Used by the knowledge
+   graph visualization, which needs the whole graph at once rather than one
+   node's neighbors. */
+export async function getAllGraphEdges() {
+  await openDB();
+  return new Promise((resolve, reject) => {
+    const store = tx('graph');
+    const req = store.getAll();
+    req.onsuccess = () => resolve(req.result || []);
+    req.onerror = e => reject(e.target.error);
+  });
+}
+
 /* Index store helpers (persistent token index, separate from search.js's in-memory index) */
 export async function indexLesson(lesson) {
   await openDB();

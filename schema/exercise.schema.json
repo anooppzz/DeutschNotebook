@@ -6,7 +6,7 @@
   "properties": {
     "version": { "type": "string" },
     "id": { "type": "string" },
-    "type": { "type": "string", "enum": ["multiple_choice", "fill_blank", "drag_drop", "ordering", "listening", "speaking"] },
+    "type": { "type": "string", "enum": ["multiple_choice", "fill_blank", "drag_drop", "ordering", "matching", "listening", "speaking", "translation", "image_selection"] },
     "prompt": { "type": "string" },
     "concept": { "type": "string" },
     "payload": { "type": "object" },

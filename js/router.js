@@ -1,4 +1,4 @@
-import { renderLessonList, renderLesson, renderLessonReview, renderReviewMode, renderDashboard } from './renderer.js';
+import { renderLessonList, renderLesson, renderLessonReview, renderReviewMode, renderDashboard, renderKnowledgeGraph } from './renderer.js';
 
 function mountRoot(root) {
   root.innerHTML = `
@@ -8,6 +8,7 @@ function mountRoot(root) {
         <input id="searchInput" class="input" placeholder="Search…" aria-label="Search lessons" />
         <button id="btnHome" class="btn">Home</button>
         <button id="btnReview" class="btn">Review</button>
+        <button id="btnGraph" class="btn">Graph</button>
         <a href="admin.html" class="btn" style="text-decoration:none;color:#fff">Admin</a>
       </div>
     </div>
@@ -15,6 +16,7 @@ function mountRoot(root) {
   `;
   document.getElementById('btnHome').addEventListener('click', () => { location.hash = ''; });
   document.getElementById('btnReview').addEventListener('click', () => { location.hash = '#review'; });
+  document.getElementById('btnGraph').addEventListener('click', () => { location.hash = '#graph'; });
   const si = document.getElementById('searchInput');
   si.addEventListener('keydown', e => {
     if (e.key === 'Enter' && si.value.trim()) {
@@ -49,6 +51,9 @@ async function route(root) {
     page.appendChild(node);
   } else if (hash === 'review') {
     const node = await renderReviewMode();
+    page.appendChild(node);
+  } else if (hash === 'graph') {
+    const node = await renderKnowledgeGraph();
     page.appendChild(node);
   } else if (hash.startsWith('search=')) {
     const q = decodeURIComponent(hash.split('=')[1]);

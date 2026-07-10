@@ -1,0 +1,15 @@
+{
+  "version": "1.0",
+  "id": "ex-image-01",
+  "type": "image_selection",
+  "prompt": "Which one matches: sein Hund (his dog)?",
+  "concept": "possessive-articles",
+  "payload": {
+    "options": [
+      { "id": "a", "image": "👨", "label": "der Mann — sein Hund" },
+      { "id": "b", "image": "👩", "label": "die Frau — ihr Hund" }
+    ]
+  },
+  "answer": "a",
+  "tags": ["possessive", "image_selection"]
+}

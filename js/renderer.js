@@ -1,4 +1,4 @@
-import { getLesson, listLessons, getMistakeStats, putProgress, getProgress, getAllProgress } from './storage.js';
+import { getLesson, listLessons, getMistakeStats, putProgress, getProgress, getAllProgress, getAllGraphEdges } from './storage.js';
 import { renderExercise } from './quiz.js';
 import { dueItems } from './review.js';
 
@@ -277,6 +277,93 @@ export async function renderDashboard() {
   statsCard.innerHTML = `<h3>Stats</h3>
     <div class="block small">${lessons.length} lesson${lessons.length === 1 ? '' : 's'} • ${exercisesAttempted} exercise${exercisesAttempted === 1 ? '' : 's'} attempted</div>`;
   root.appendChild(statsCard);
+
+  return root;
+}
+
+// Knowledge graph: a simple circular node-link diagram of every lesson and
+// its dependsOn/related edges (from the graph store, which already existed
+// but was previously only ever read via the plain "Related:" text link on
+// individual lesson pages — this is the first place it's actually
+// visualized). No external graph/layout library — positions are computed
+// with basic trigonometry, which is enough for the lesson counts this app
+// will have for a while.
+export async function renderKnowledgeGraph() {
+  const root = document.createElement('div');
+  const header = document.createElement('div');
+  header.className = 'card';
+  header.innerHTML = '<h2 class="lesson-title">Knowledge Graph</h2><div class="small">Click a node to open that lesson.</div>';
+  root.appendChild(header);
+
+  const lessons = await listLessons();
+  const wrap = document.createElement('div');
+  wrap.className = 'card';
+
+  if (!lessons.length) {
+    wrap.innerHTML = '<div class="small">No lessons yet.</div>';
+    root.appendChild(wrap);
+    return root;
+  }
+
+  const edgesRaw = await getAllGraphEdges();
+  const nodeIds = new Set(lessons.map(l => l.id));
+  // Only draw edges where both endpoints are real, currently-known lessons
+  // — a dependsOn/related reference to a lesson id that doesn't exist yet
+  // is silently skipped rather than drawn as a dangling line.
+  const edges = edgesRaw.filter(e => nodeIds.has(e.from) && nodeIds.has(e.to));
+
+  const size = 520;
+  const cx = size / 2;
+  const cy = size / 2;
+  const radius = size / 2 - 60;
+  const positions = {};
+  lessons.forEach((l, i) => {
+    const angle = (2 * Math.PI * i) / lessons.length - Math.PI / 2;
+    positions[l.id] = {
+      x: cx + radius * Math.cos(angle),
+      y: cy + radius * Math.sin(angle)
+    };
+  });
+
+  const svgParts = [];
+  // Edges first, so node circles draw on top of the lines rather than under them.
+  edges.forEach(e => {
+    const a = positions[e.from];
+    const b = positions[e.to];
+    if (!a || !b) return;
+    const color = e.type === 'dependsOn' ? '#b45309' : '#0b5cff';
+    const dash = e.type === 'dependsOn' ? '4,3' : '';
+    svgParts.push(`<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="${color}" stroke-width="1.5" stroke-dasharray="${dash}" />`);
+  });
+  lessons.forEach(l => {
+    const p = positions[l.id];
+    const label = escapeHtml(l.title.length > 18 ? l.title.slice(0, 16) + '…' : l.title);
+    svgParts.push(`
+      <a href="#lesson=${encodeURIComponent(l.id)}">
+        <circle cx="${p.x}" cy="${p.y}" r="34" fill="#f8fafc" stroke="#0b5cff" stroke-width="2" />
+        <text x="${p.x}" y="${p.y}" text-anchor="middle" dominant-baseline="middle" font-size="10" fill="#111">${label}</text>
+      </a>
+    `);
+  });
+
+  wrap.innerHTML = `
+    <svg viewBox="0 0 ${size} ${size}" style="width:100%;max-width:${size}px;height:auto;display:block;margin:0 auto">
+      ${svgParts.join('')}
+    </svg>
+    <div class="small" style="margin-top:8px">
+      <span style="color:#0b5cff">⎯</span> related &nbsp;&nbsp;
+      <span style="color:#b45309">┄</span> depends on
+    </div>
+  `;
+  root.appendChild(wrap);
+
+  const isolated = lessons.filter(l => !edges.some(e => e.from === l.id || e.to === l.id));
+  if (isolated.length) {
+    const note = document.createElement('div');
+    note.className = 'card small';
+    note.textContent = `Not yet connected to any other lesson: ${isolated.map(l => l.title).join(', ')}`;
+    root.appendChild(note);
+  }
 
   return root;
 }

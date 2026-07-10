@@ -1,4 +1,4 @@
-import { openDB, putLesson, listLessons } from './storage.js';
+import { openDB, putLesson, listLessons, putGraphEdges } from './storage.js';
 import { routerInit } from './router.js';
 import { indexAllLessons } from './search.js';
 
@@ -17,6 +17,17 @@ async function seedLessonsIfEmpty() {
       if (!res.ok) continue;
       const json = await res.json();
       await putLesson(json);
+
+      // Bundled lessons' dependsOn/related arrays were previously only
+      // written into the graph store when a lesson was imported through
+      // the Admin UI (import-ui.js / admin.js) — bundled seeding here never
+      // did the same, so the knowledge graph store stayed empty for the
+      // lessons most people would actually see first. Mirroring that same
+      // edge-building logic here so seeded lessons show up in the graph too.
+      const edges = [];
+      (json.dependsOn || []).forEach(dep => edges.push({ from: json.id, to: dep, type: 'dependsOn' }));
+      (json.related || []).forEach(rel => edges.push({ from: json.id, to: rel, type: 'related' }));
+      if (edges.length) await putGraphEdges(edges);
     } catch (err) {
       console.warn('Could not seed lesson', id, err);
     }

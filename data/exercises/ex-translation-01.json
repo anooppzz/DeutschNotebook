@@ -1,0 +1,9 @@
+{
+  "version": "1.0",
+  "id": "ex-translation-01",
+  "type": "translation",
+  "prompt": "Translate: Our house.",
+  "concept": "possessive-articles",
+  "answer": "unser Haus",
+  "tags": ["possessive", "translation"]
+}

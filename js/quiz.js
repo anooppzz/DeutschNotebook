@@ -291,6 +291,170 @@ registerExercise('listening', (exercise) => {
   return root;
 });
 
+/* Translation: free-text translation, checked against one acceptable answer
+   or an array of acceptable answers (case-insensitive, trimmed). */
+registerExercise('translation', (exercise) => {
+  const root = document.createElement('div');
+  root.className = 'exercise';
+  root.setAttribute('role', 'group');
+  root.setAttribute('aria-label', exercise.prompt || 'Translation exercise');
+  root.innerHTML = `<div class="small">${escapeHtml(exercise.prompt)}</div>`;
+  const input = document.createElement('input');
+  input.className = 'input';
+  input.style.marginTop = '8px';
+  input.setAttribute('aria-label', 'Translation input');
+  const btn = document.createElement('button');
+  btn.className = 'btn';
+  btn.style.marginLeft = '8px';
+  btn.textContent = 'Check';
+  btn.addEventListener('click', async () => {
+    const val = input.value.trim().toLowerCase();
+    const acceptable = Array.isArray(exercise.answer) ? exercise.answer : [exercise.answer];
+    const correct = acceptable.some(a => String(a).trim().toLowerCase() === val);
+    showFeedback(root, correct);
+    await recordAnswer(exercise.id, correct, exercise.concept);
+  });
+  const row = document.createElement('div');
+  row.style.marginTop = '8px';
+  row.appendChild(input);
+  row.appendChild(btn);
+  root.appendChild(row);
+  return root;
+});
+
+/* Image selection: exercise.payload = { options: [{ id, image, label }] },
+   exercise.answer = correct option's id. `image` can be a real image URL
+   OR an emoji/short text stand-in (auto-detected below) — this lets the
+   exercise type work today without needing real image assets, using
+   emoji the same way doc 4's own example did ("👨 sein Hund"); swapping in
+   real <img> sources later needs no changes here. */
+registerExercise('image_selection', (exercise) => {
+  const root = document.createElement('div');
+  root.className = 'exercise';
+  root.setAttribute('role', 'group');
+  root.setAttribute('aria-label', exercise.prompt || 'Image selection exercise');
+  root.innerHTML = `<div class="small">${escapeHtml(exercise.prompt)}</div>`;
+  const opts = document.createElement('div');
+  opts.style.display = 'flex';
+  opts.style.gap = '12px';
+  opts.style.marginTop = '8px';
+  opts.style.flexWrap = 'wrap';
+  (exercise.payload.options || []).forEach(opt => {
+    const optEl = document.createElement('button');
+    optEl.className = 'card';
+    optEl.style.cursor = 'pointer';
+    optEl.style.border = 'none';
+    optEl.style.textAlign = 'center';
+    optEl.style.minWidth = '100px';
+    const looksLikeUrl = /^(https?:|\.?\/|data:)/.test(opt.image || '');
+    if (looksLikeUrl) {
+      const img = document.createElement('img');
+      img.src = opt.image;
+      img.alt = opt.label || '';
+      img.style.maxWidth = '80px';
+      img.style.display = 'block';
+      img.style.margin = '0 auto';
+      optEl.appendChild(img);
+    } else {
+      const span = document.createElement('div');
+      span.style.fontSize = '40px';
+      span.textContent = opt.image || '?';
+      optEl.appendChild(span);
+    }
+    if (opt.label) {
+      const labelEl = document.createElement('div');
+      labelEl.className = 'small';
+      labelEl.style.marginTop = '4px';
+      labelEl.textContent = opt.label;
+      optEl.appendChild(labelEl);
+    }
+    optEl.addEventListener('click', async () => {
+      const correct = String(opt.id) === String(exercise.answer);
+      showFeedback(root, correct);
+      await recordAnswer(exercise.id, correct, exercise.concept);
+    });
+    opts.appendChild(optEl);
+  });
+  root.appendChild(opts);
+  return root;
+});
+
+/* Speaking: uses the browser's Web Speech API (SpeechRecognition) when
+   available to capture and check spoken answers against exercise.answer.
+   Falls back to an honest self-assessment (two buttons) in browsers that
+   don't support it, rather than silently doing nothing or pretending to
+   check something it can't. */
+registerExercise('speaking', (exercise) => {
+  const root = document.createElement('div');
+  root.className = 'exercise';
+  root.setAttribute('role', 'group');
+  root.setAttribute('aria-label', exercise.prompt || 'Speaking exercise');
+  root.innerHTML = `<div class="small">${escapeHtml(exercise.prompt)}</div>`;
+  const targetPhrase = String(exercise.answer || '').trim().toLowerCase();
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (SpeechRecognition) {
+    const btn = document.createElement('button');
+    btn.className = 'btn';
+    btn.style.marginTop = '8px';
+    btn.textContent = 'Start speaking';
+    const transcriptEl = document.createElement('div');
+    transcriptEl.className = 'small';
+    transcriptEl.style.marginTop = '8px';
+    btn.addEventListener('click', () => {
+      const recognition = new SpeechRecognition();
+      recognition.lang = exercise.lang || 'de-DE';
+      recognition.maxAlternatives = 1;
+      btn.disabled = true;
+      btn.textContent = 'Listening…';
+      recognition.onresult = async (event) => {
+        const said = event.results[0][0].transcript.trim().toLowerCase();
+        transcriptEl.textContent = `You said: "${said}"`;
+        const correct = said === targetPhrase || said.includes(targetPhrase);
+        showFeedback(root, correct);
+        await recordAnswer(exercise.id, correct, exercise.concept);
+      };
+      recognition.onerror = () => {
+        transcriptEl.textContent = 'Could not hear you clearly — try again.';
+      };
+      recognition.onend = () => {
+        btn.disabled = false;
+        btn.textContent = 'Start speaking';
+      };
+      recognition.start();
+    });
+    root.appendChild(btn);
+    root.appendChild(transcriptEl);
+  } else {
+    const note = document.createElement('div');
+    note.className = 'small';
+    note.style.marginTop = '8px';
+    note.textContent = "Speech recognition isn't supported in this browser. Say the phrase aloud, then self-assess:";
+    root.appendChild(note);
+    const row = document.createElement('div');
+    row.style.marginTop = '8px';
+    const yesBtn = document.createElement('button');
+    yesBtn.className = 'btn';
+    yesBtn.style.marginRight = '8px';
+    yesBtn.textContent = 'I said it correctly';
+    yesBtn.addEventListener('click', async () => {
+      showFeedback(root, true);
+      await recordAnswer(exercise.id, true, exercise.concept);
+    });
+    const noBtn = document.createElement('button');
+    noBtn.className = 'btn';
+    noBtn.textContent = 'I need more practice';
+    noBtn.addEventListener('click', async () => {
+      showFeedback(root, false);
+      await recordAnswer(exercise.id, false, exercise.concept);
+    });
+    row.appendChild(yesBtn);
+    row.appendChild(noBtn);
+    root.appendChild(row);
+  }
+  return root;
+});
+
 function showFeedback(root, correct) {
   let fb = root.querySelector('.fb');
   if (!fb) {

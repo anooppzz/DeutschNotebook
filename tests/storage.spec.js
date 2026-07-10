@@ -1,4 +1,4 @@
-import { openDB, putLesson, getLesson, listLessons, putGraphEdges, getGraphNeighbors, putProgress, getAllProgress } from '../js/storage.js';
+import { openDB, putLesson, getLesson, listLessons, putGraphEdges, getGraphNeighbors, getAllGraphEdges, putProgress, getAllProgress } from '../js/storage.js';
 
 async function assert(cond, msg) {
   const out = document.getElementById('out');
@@ -23,6 +23,13 @@ export async function run() {
   await putGraphEdges(edges);
   const neigh = await getGraphNeighbors('test-lesson-1');
   await assert(Array.isArray(neigh) && neigh.length >= 1, 'graph neighbors');
+
+  // getAllGraphEdges() should return every edge across the whole graph
+  // store, not just one node's neighbors — used by the knowledge graph
+  // visualization, which needs the full edge set at once.
+  const allEdges = await getAllGraphEdges();
+  const foundEdge = allEdges.find(e => e.from === 'test-lesson-1' && e.to === 'other' && e.type === 'related');
+  await assert(Array.isArray(allEdges) && !!foundEdge, 'getAllGraphEdges includes a freshly written edge');
 
   // Note: getLesson('non-existent') would otherwise try a network fallback fetch
   // to data/lessons/non-existent.json relative to this test page, which doesn't
