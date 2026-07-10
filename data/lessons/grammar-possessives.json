@@ -11,8 +11,8 @@
   "sections": [
     { "type": "intro", "title": "Overview", "text": "Possessive articles agree with the noun in gender and number." },
     { "type": "grammar", "title": "Forms", "text": "mein, dein, sein, ihr, unser, euer, ihr" },
-    { "type": "examples", "examples": [{ "text": "Das ist mein Buch.", "translation": "That is my book.", "audio": "assets/audio/mein_buch.mp3" }] },
-    { "type": "exercise", "exerciseId": "ex-pos-01" }
+    { "type": "checkpoint", "exerciseId": "ex-pos-01" },
+    { "type": "examples", "examples": [{ "text": "Das ist mein Buch.", "translation": "That is my book.", "audio": "assets/audio/mein_buch.mp3" }] }
   ],
   "vocabulary": [
     { "id": "v-hund", "word": "Hund", "article": "der", "plural": "Hunde", "audio": "assets/audio/hund.mp3" }

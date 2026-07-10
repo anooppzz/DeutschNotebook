@@ -1,4 +1,4 @@
-import { getLesson, listLessons, getMistakeStats } from './storage.js';
+import { getLesson, listLessons, getMistakeStats, putProgress, getProgress, getAllProgress } from './storage.js';
 import { renderExercise } from './quiz.js';
 import { dueItems } from './review.js';
 
@@ -28,9 +28,18 @@ export async function renderLesson(id) {
     root.textContent = 'Lesson not found';
     return root;
   }
+
+  // Record this as the most recently opened lesson, for the Dashboard's
+  // "Continue Learning" card. Stored under the progress store using a
+  // non-"ex:"-prefixed key so it doesn't get counted as an exercise by
+  // getAllProgress()-based stats elsewhere.
+  await putProgress('meta:lastOpened', { lessonId: id, timestamp: Date.now() });
+
   root.className = 'card';
   const header = document.createElement('div');
-  header.innerHTML = `<h2 class="lesson-title">${escapeHtml(lesson.title)}</h2><div class="meta small">${escapeHtml(lesson.level || '')} • ${lesson.estimatedTime || '?'} min</div>`;
+  header.innerHTML = `<h2 class="lesson-title">${escapeHtml(lesson.title)}</h2>
+    <div class="meta small">${escapeHtml(lesson.level || '')} • ${lesson.estimatedTime || '?'} min
+      • <a href="#lessonReview=${encodeURIComponent(lesson.id)}">Review this lesson</a></div>`;
   root.appendChild(header);
 
   for (const section of lesson.sections || []) {
@@ -57,6 +66,15 @@ export async function renderLesson(id) {
       block.innerHTML += `<h3>Exercise</h3>`;
       const exNode = await renderExercise(section.exerciseId, lesson);
       block.appendChild(exNode);
+    } else if (section.type === 'checkpoint') {
+      // A quick retrieval-practice question interleaved between grammar/
+      // examples sections, rather than saved for one big exercise block at
+      // the end of the lesson. Reuses the same exercise engine as a full
+      // "Exercise" section — only the heading differs, to signal it's a
+      // quick check rather than the lesson's main exercise.
+      block.innerHTML += `<h3>Quick check</h3>`;
+      const cpNode = await renderExercise(section.exerciseId, lesson);
+      block.appendChild(cpNode);
     } else {
       // generic
       if (section.title) block.innerHTML += `<h3>${escapeHtml(section.title)}</h3>`;
@@ -94,6 +112,62 @@ export async function renderLesson(id) {
     rel.className = 'block small';
     rel.innerHTML = `<strong>Related:</strong> ${lesson.related.map(r => `<a href="#lesson=${encodeURIComponent(r)}">${escapeHtml(r)}</a>`).join(', ')}`;
     root.appendChild(rel);
+  }
+
+  return root;
+}
+
+// Condensed per-lesson review view: a one-line rule, a single example, then
+// straight into that lesson's own exercises — no full intro/grammar prose,
+// no vocabulary block, no related links. This is the per-lesson counterpart
+// to the site-wide #review page (which pools due exercises across every
+// lesson); this one is reached via "Review this lesson" on the full lesson
+// page, for someone who wants a quick refresher on one specific topic.
+export async function renderLessonReview(id) {
+  const lesson = await getLesson(id);
+  const root = document.createElement('div');
+  if (!lesson) {
+    root.className = 'card';
+    root.textContent = 'Lesson not found';
+    return root;
+  }
+  root.className = 'card';
+  const header = document.createElement('div');
+  header.innerHTML = `<h2 class="lesson-title">${escapeHtml(lesson.title)} — Review</h2>
+    <div class="meta small"><a href="#lesson=${encodeURIComponent(lesson.id)}">Full lesson</a></div>`;
+  root.appendChild(header);
+
+  const ruleSection = (lesson.sections || []).find(s => (s.type === 'intro' || s.type === 'grammar') && s.text);
+  if (ruleSection) {
+    const ruleEl = document.createElement('div');
+    ruleEl.className = 'block';
+    ruleEl.innerHTML = `<div>${escapeHtml(ruleSection.text)}</div>`;
+    root.appendChild(ruleEl);
+  }
+
+  const examplesSection = (lesson.sections || []).find(s => s.type === 'examples' && s.examples && s.examples.length);
+  if (examplesSection) {
+    const ex = examplesSection.examples[0];
+    const exEl = document.createElement('div');
+    exEl.className = 'example';
+    exEl.innerHTML = `<div>${escapeHtml(ex.text)}</div><div class="small">${escapeHtml(ex.translation || '')}</div>`;
+    root.appendChild(exEl);
+  }
+
+  const exerciseIds = lesson.exercises || [];
+  if (!exerciseIds.length) {
+    const none = document.createElement('div');
+    none.className = 'block small';
+    none.textContent = 'No exercises yet for this lesson.';
+    root.appendChild(none);
+  } else {
+    for (const exId of exerciseIds) {
+      const block = document.createElement('div');
+      block.className = 'block';
+      const exNode = await renderExercise(exId, lesson);
+      block.appendChild(exNode);
+      root.appendChild(block);
+    }
   }
 
   return root;
@@ -151,6 +225,58 @@ export async function renderReviewMode() {
     wrap.appendChild(exNode);
     root.appendChild(wrap);
   }
+
+  return root;
+}
+
+// Dashboard: shown at the top of Home, above the lesson list. Surfaces data
+// that Tier 1 already computes (due count, weak concepts) plus a pointer to
+// the most recently opened lesson and a small stats strip, rather than
+// requiring a separate page visit to see any of it.
+export async function renderDashboard() {
+  const root = document.createElement('div');
+
+  const lastOpened = await getProgress('meta:lastOpened');
+  if (lastOpened && lastOpened.lessonId) {
+    const lesson = await getLesson(lastOpened.lessonId);
+    if (lesson) {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `<h3>Continue Learning</h3>
+        <div class="block"><a href="#lesson=${encodeURIComponent(lesson.id)}">${escapeHtml(lesson.title)}</a></div>`;
+      root.appendChild(card);
+    }
+  }
+
+  const due = await dueItems();
+  const reviewCard = document.createElement('div');
+  reviewCard.className = 'card';
+  reviewCard.innerHTML = `<h3>Today's Review</h3>
+    <div class="block small">${due.length} exercise${due.length === 1 ? '' : 's'} due — <a href="#review">Go to Review</a></div>`;
+  root.appendChild(reviewCard);
+
+  const mistakes = await getMistakeStats();
+  if (mistakes.length) {
+    const mCard = document.createElement('div');
+    mCard.className = 'card';
+    mCard.innerHTML = '<h3>Often Missed</h3>';
+    mistakes.slice(0, 3).forEach(m => {
+      const line = document.createElement('div');
+      line.className = 'block small';
+      line.textContent = `${m.concept} — missed ${m.count} time${m.count === 1 ? '' : 's'}`;
+      mCard.appendChild(line);
+    });
+    root.appendChild(mCard);
+  }
+
+  const lessons = await listLessons();
+  const allProgress = await getAllProgress();
+  const exercisesAttempted = allProgress.filter(p => p.key && p.key.startsWith('ex:')).length;
+  const statsCard = document.createElement('div');
+  statsCard.className = 'card';
+  statsCard.innerHTML = `<h3>Stats</h3>
+    <div class="block small">${lessons.length} lesson${lessons.length === 1 ? '' : 's'} • ${exercisesAttempted} exercise${exercisesAttempted === 1 ? '' : 's'} attempted</div>`;
+  root.appendChild(statsCard);
 
   return root;
 }

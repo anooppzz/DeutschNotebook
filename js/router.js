@@ -1,4 +1,4 @@
-import { renderLessonList, renderLesson, renderReviewMode } from './renderer.js';
+import { renderLessonList, renderLesson, renderLessonReview, renderReviewMode, renderDashboard } from './renderer.js';
 
 function mountRoot(root) {
   root.innerHTML = `
@@ -35,8 +35,14 @@ async function route(root) {
   const hash = location.hash.slice(1);
 
   if (!hash) {
+    const dash = await renderDashboard();
+    page.appendChild(dash);
     const list = await renderLessonList();
     page.appendChild(list);
+  } else if (hash.startsWith('lessonReview=')) {
+    const id = decodeURIComponent(hash.split('=')[1]);
+    const node = await renderLessonReview(id);
+    page.appendChild(node);
   } else if (hash.startsWith('lesson=')) {
     const id = decodeURIComponent(hash.split('=')[1]);
     const node = await renderLesson(id);

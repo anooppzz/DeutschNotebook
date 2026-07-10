@@ -108,6 +108,19 @@ export async function getProgress(key) {
   });
 }
 
+/* Returns every stored progress record, as {key, value} pairs. Used for
+   dashboard-level aggregation (e.g. counting exercises attempted) where a
+   single-key lookup via getProgress() isn't enough. */
+export async function getAllProgress() {
+  await openDB();
+  return new Promise((resolve, reject) => {
+    const store = tx('progress');
+    const req = store.getAll();
+    req.onsuccess = () => resolve(req.result || []);
+    req.onerror = e => reject(e.target.error);
+  });
+}
+
 /* Graph store helpers */
 export async function putGraphEdges(edges) {
   // edges: [{from,to,type}]
